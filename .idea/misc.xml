@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Amadeus/app/src/main/res/xml/preferences.xml" value="0.1" />
+        <entry key="..\:/com/example/Amadeus/app/src/main/res/layout/activity_alarm.xml" value="0.15745721271393642" />
+        <entry key="..\:/com/example/Amadeus/app/src/main/res/xml/preferences.xml" value="0.1" />
+      </map>
+    </option>
+  </component>
+  <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK" />
+</project>

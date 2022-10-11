@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/pref_app_settings">
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="show_subtitles"
+            android:summary="@string/pref_subtitles_desc"
+            android:title="@string/pref_subtitles" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="show_notification"
+            android:summary="@string/pref_notification_desc"
+            android:title="@string/pref_notification" />
+        <ListPreference
+            android:defaultValue="@string/default_recog_lang"
+            android:entries="@array/languagesRecogArray"
+            android:entryValues="@array/languagesRecogValues"
+            android:key="recognition_lang"
+            android:summary="@string/pref_recog_lang_desc"
+            android:title="@string/pref_recog_lang" />
+        <ListPreference
+            android:defaultValue="@string/default_lang"
+            android:entries="@array/languagesArray"
+            android:entryValues="@array/languagesValues"
+            android:key="lang"
+            android:summary="@string/pref_lang_desc"
+            android:title="@string/pref_lang" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_alarm_settings">
+        <Preference android:title="@string/pref_alarm_setup">
+            <intent
+                android:action="android.intent.action.VIEW.ALARM"
+                />
+        </Preference>
+        <ListPreference
+            android:entries="@array/ringtonesArray"
+            android:entryValues="@array/ringtonesValues"
+            android:key="ringtone"
+            android:summary="@string/pref_alarm_ringtone_desc"
+            android:title="@string/pref_alarm_ringtone" />
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="24-hour_format"
+            android:title="@string/pref_alarm_24hour_format" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="vibrate"
+            android:title="@string/pref_alarm_vibrate" />
+    </PreferenceCategory>
+</PreferenceScreen>
