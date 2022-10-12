@@ -25,6 +25,13 @@
             android:key="lang"
             android:summary="@string/pref_lang_desc"
             android:title="@string/pref_lang" />
+        <ListPreference
+            android:defaultValue="com.google.android.googlequicksearchbox"
+            android:entries="@array/sr_entries"
+            android:entryValues="@array/sr_values"
+            android:key="default_recognition"
+            android:summary="根据手机系统选择语音识别软件版本"
+            android:title="默认语音识别软件"/>
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_alarm_settings">
         <Preference android:title="@string/pref_alarm_setup">

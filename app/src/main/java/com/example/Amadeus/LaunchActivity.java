@@ -11,6 +11,7 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.speech.SpeechRecognizer;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -47,14 +48,6 @@ public class LaunchActivity extends AppCompatActivity {
         }
     };
 
-    private boolean isAppInstalled(Context context, String packageName) {
-        try {
-            context.getPackageManager().getApplicationInfo(packageName, 0);
-            return true;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +61,8 @@ public class LaunchActivity extends AppCompatActivity {
 
         aniHandle.post(aniRunnable);
 
-        if (!isAppInstalled(LaunchActivity.this, "com.google.android.googlequicksearchbox")) {
+        // 检测系统语音识别服务是否正常运行
+        if (!SpeechRecognizer.isRecognitionAvailable(LaunchActivity.this)) {
             status.setText(R.string.google_app_error);
         }
 
@@ -169,7 +163,7 @@ public class LaunchActivity extends AppCompatActivity {
             status.setText(R.string.disconnected);
         } else if (Alarm.isPlaying()) {
             status.setText(R.string.incoming_call);
-        } else if (!isAppInstalled(LaunchActivity.this, "com.google.android.googlequicksearchbox")) {
+        } else if (!SpeechRecognizer.isRecognitionAvailable(LaunchActivity.this)) {
             status.setText(R.string.google_app_error);
         }  else {
             status.setText(R.string.call);

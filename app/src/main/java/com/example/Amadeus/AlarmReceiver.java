@@ -29,9 +29,9 @@ public class AlarmReceiver extends BroadcastReceiver {
         int index = Integer.parseInt(settings.getString("ringtone", "0"));
 
         Log.d(TAG, "Starting alarm...");
-
+        // 响铃并振动
         Alarm.start(context, ringtones[index]);
-
+        // 触发事件（目前是跳转至启动页与发送通知）
         Intent service = new Intent(context, AlarmService.class);
         context.startService(service);
         // 此代码会产生奇怪的错误：BroadcastReceiver trying to return result during a non-ordered broadcast

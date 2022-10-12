@@ -10,6 +10,8 @@ import android.util.Log;
 
 import androidx.legacy.content.WakefulBroadcastReceiver;
 
+
+// 本模块似乎没有任何用，谨慎起见暂未删除，之后再做考虑
 public class AlarmBootReceiver extends WakefulBroadcastReceiver {
 
     final String TAG = "AlarmBootReceiver";

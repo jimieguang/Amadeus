@@ -45,7 +45,12 @@ public class AlarmActivity extends AppCompatActivity {
             pendingIntent = PendingIntent.getBroadcast(this, Alarm.ALARM_ID, new Intent(this, AlarmReceiver.class), PendingIntent.FLAG_ONE_SHOT);
         }
         alarmTimePicker.setIs24HourView(settings.getBoolean("24-hour_format", true));
-
+        // 测试代码（直接触发响铃事件）
+//        try {
+//            pendingIntent.send();
+//        } catch (PendingIntent.CanceledException e) {
+//            e.printStackTrace();
+//        }
         // 闹钟状态
         if (settings.getBoolean("alarm_toggle", false)) {
             alarmToggle.setChecked(true);
