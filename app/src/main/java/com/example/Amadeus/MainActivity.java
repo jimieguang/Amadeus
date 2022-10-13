@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.media.Image;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -25,8 +26,11 @@ import android.speech.SpeechRecognizer;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Switch;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
@@ -45,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
     private String recogLang;
     private String[] contextLang;
     private SpeechRecognizer sr;
+    private ImageView micro;
+    private TextView input_view;
 
     // 根据系统的不同，初始化语音识别模块
     protected void initSpeechRecognizer(Context context, SharedPreferences settings) {
@@ -83,6 +89,10 @@ public class MainActivity extends AppCompatActivity {
 
         ImageView kurisu = (ImageView) findViewById(R.id.imageView_kurisu);
         ImageView subtitlesBackground = (ImageView) findViewById(R.id.imageView_subtitles);
+        // 用于提醒用户是否在录音
+        micro = (ImageView) findViewById(R.id.micro);
+        // 显示语音识别结果
+        input_view = (TextView) findViewById(R.id.input);
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         recogLang = settings.getString("recognition_lang", "ja-JP");
         contextLang = recogLang.split("-");
@@ -101,7 +111,7 @@ public class MainActivity extends AppCompatActivity {
         if (!settings.getBoolean("show_subtitles", false)) {
             subtitlesBackground.setVisibility(View.INVISIBLE);
         }
-
+        // 动态请求权限
         ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_PERMISSION_RECORD_AUDIO);
         ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.INTERNET}, REQUEST_PERMISSION_INTERNET);
 
@@ -123,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     MainActivity host = (MainActivity) view.getContext();
 
-                    // 获取录音权限
+                    // 判断是否成功获取录音权限
                     int permissionCheck = ContextCompat.checkSelfPermission(host,
                             Manifest.permission.RECORD_AUDIO);
 
@@ -185,6 +195,7 @@ public class MainActivity extends AppCompatActivity {
 
     // 获取用户语音输入(谷歌原生)
     private void promptSpeechInput() {
+        micro.setVisibility(View.INVISIBLE);    //设置灰色麦克风不可见，则后面的绿色麦克风会显示出来
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
@@ -279,6 +290,7 @@ public class MainActivity extends AppCompatActivity {
                     return;
             }
             sr.cancel();
+            micro.setVisibility(View.VISIBLE);
             Amadeus.speak(voiceLines[VoiceLine.Line.SORRY], MainActivity.this);
         }
         public void onResults(Bundle results) {
@@ -293,6 +305,8 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, debug);
 
             input += data.get(0);
+            // 显示识别结果
+            input_view.setText(input);
             /* TODO: Japanese doesn't split the words. Sigh. */
             String[] splitInput = input.split(" ");
 
@@ -316,6 +330,7 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 Amadeus.responseToInput(input, context, MainActivity.this);
             }
+            micro.setVisibility(View.VISIBLE);
         }
         public void onPartialResults(Bundle partialResults) {
             Log.d(TAG, "onPartialResults");
