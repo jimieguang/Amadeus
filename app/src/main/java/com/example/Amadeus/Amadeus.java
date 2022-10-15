@@ -28,6 +28,7 @@ class Amadeus {
 
     static Boolean isSpeaking = false;
     static Boolean isLoop = false;
+    static Boolean isListening = false;
     static MediaPlayer m;
     private static String TAG = "Amadeus";
     private static int shaman_girls = -1;

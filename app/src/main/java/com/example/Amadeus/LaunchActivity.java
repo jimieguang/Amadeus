@@ -6,7 +6,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
@@ -51,6 +50,8 @@ public class LaunchActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // 调用http测试代码
+        new Voice_reply().send("你好哇。");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launch);
         connect = (ImageView) findViewById(R.id.imageView_connect);

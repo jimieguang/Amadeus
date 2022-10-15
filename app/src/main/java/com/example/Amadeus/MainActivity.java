@@ -13,7 +13,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.media.Image;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -26,15 +25,12 @@ import android.speech.SpeechRecognizer;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -138,8 +134,9 @@ public class MainActivity extends AppCompatActivity {
                             Manifest.permission.RECORD_AUDIO);
 
                     /* Input during loop produces bugs and mixes with output */
-                    if (!Amadeus.isLoop && !Amadeus.isSpeaking) {
+                    if (!Amadeus.isLoop && !Amadeus.isSpeaking&& !Amadeus.isListening) {
                         if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+                            Amadeus.isListening = true;
                             promptSpeechInput();
                         } else {
                             Amadeus.speak(voiceLines[VoiceLine.Line.DAGA_KOTOWARU], MainActivity.this);
@@ -203,7 +200,7 @@ public class MainActivity extends AppCompatActivity {
 
         if(SpeechRecognizer.isRecognitionAvailable(MainActivity.this)){
             //提示语音开始文字
-            intent.putExtra(RecognizerIntent.EXTRA_PROMPT,"Please start your voice");
+//            intent.putExtra(RecognizerIntent.EXTRA_PROMPT,"Please start your voice");
             sr.startListening(intent);
         }else{
             Amadeus.speak(voiceLines[VoiceLine.Line.SORRY], MainActivity.this);
@@ -253,42 +250,46 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "Speech recognition end");
         }
         public void onError(int error) {
+            String error_info;
             switch (error) {
                 case SpeechRecognizer.ERROR_AUDIO:
-                    Log.d(TAG, "ERROR_AUDIO");
+                    error_info = "ERROR_AUDIO";
                     break;
                 case SpeechRecognizer.ERROR_CLIENT:
-                    Log.d(TAG, "ERROR_CLIENT");
+                    error_info = "ERROR_CLIENT";
                     break;
                 case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
-                    Log.d(TAG, "ERROR_RECOGNIZER_BUSY");
+                    error_info = "ERROR_RECOGNIZER_BUSY";
                     break;
                 case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
-                    Log.d(TAG, "ERROR_INSUFFICIENT_PERMISSIONS");
+                    error_info = "ERROR_INSUFFICIENT_PERMISSIONS";
                     break;
                 case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
-                    Log.d(TAG, "ERROR_NETWORK_TIMEOUT");
+                    error_info = "ERROR_NETWORK_TIMEOUT";
                     break;
                 case SpeechRecognizer.ERROR_NETWORK:
+                    error_info = "ERROR_NETWORK";
                     sr.destroy();
-                    Log.d(TAG, "ERROR_NETWORK");
                     break;
                 case SpeechRecognizer.ERROR_SERVER:
-                    Log.d(TAG, "ERROR_SERVER");
+                    error_info = "ERROR_SERVER";
                     break;
                 case SpeechRecognizer.ERROR_NO_MATCH:
-                    Log.d(TAG, "ERROR_NO_MATCH");
+                    error_info = "ERROR_NO_MATCH";
                     break;
                 case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
-                    Log.d(TAG, "ERROR_SPEECH_TIMEOUT");
+                    error_info = "ERROR_SPEECH_TIMEOUT";
                     break;
                 case SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE:
-                    Log.d(TAG,"ERROR_LANGUAGE_UNAVAILABLE ");
+                    error_info = "ERROR_LANGUAGE_UNAVAILABLE";
                     break;
                 default:
                     assert false;
                     return;
             }
+            Log.d(TAG,error_info);
+            input_view.setText("ErrorExist:"+error_info);
+            Amadeus.isListening = false;
             sr.cancel();
             micro.setVisibility(View.VISIBLE);
             Amadeus.speak(voiceLines[VoiceLine.Line.SORRY], MainActivity.this);
@@ -331,6 +332,7 @@ public class MainActivity extends AppCompatActivity {
                 Amadeus.responseToInput(input, context, MainActivity.this);
             }
             micro.setVisibility(View.VISIBLE);
+            Amadeus.isListening = false;
         }
         public void onPartialResults(Bundle partialResults) {
             Log.d(TAG, "onPartialResults");
