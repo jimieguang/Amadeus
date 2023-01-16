@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -51,7 +52,7 @@ public class LaunchActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // 调用http测试代码
-        new Voice_reply().send("你好哇。");
+//        new Voice_reply().send("你好哇。");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_launch);
         connect = (ImageView) findViewById(R.id.imageView_connect);
@@ -70,8 +71,12 @@ public class LaunchActivity extends AppCompatActivity {
         if (Alarm.isPlaying()) {
             status.setText(R.string.incoming_call);
             // 发送通知并使屏幕常亮
-            setShowWhenLocked(true);
-            setTurnScreenOn(true);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                setShowWhenLocked(true);
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                setTurnScreenOn(true);
+            }
         }
 
         if (settings.getBoolean("show_notification", false)) {

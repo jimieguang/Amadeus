@@ -4,25 +4,16 @@ package com.example.Amadeus;
  * Big thanks to https://github.com/RIP95 aka Emojikage
  */
 
-import static android.content.pm.PackageManager.MATCH_ALL;
-
 import android.Manifest;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.Settings;
-import android.speech.RecognitionListener;
-import android.speech.RecognitionService;
 import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -32,11 +23,18 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
 
+import com.baidu.speech.EventListener;
+import com.baidu.speech.EventManager;
+import com.baidu.speech.EventManagerFactory;
+import com.baidu.speech.asr.SpeechConstant;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements EventListener {
 
     private final String TAG = "MainActivity";
 
@@ -44,38 +42,11 @@ public class MainActivity extends AppCompatActivity {
     private final Random random = new Random();
     private String recogLang;
     private String[] contextLang;
-    private SpeechRecognizer sr;
     private ImageView micro;
     private TextView input_view;
+    // 百度语音识别模块
+    private EventManager asr;
 
-    // 根据系统的不同，初始化语音识别模块
-    protected void initSpeechRecognizer(Context context, SharedPreferences settings) {
-        String default_recognition = settings.getString("default_recognition", "com.google.android.googlequicksearchbox");
-        // 获取当前系统内置语音识别服务，并组装成一个Component组件
-        String serviceComponent = Settings.Secure.getString(this.getContentResolver(),
-                "voice_recognition_service");
-        ComponentName component = ComponentName.unflattenFromString(serviceComponent);
-        // 如果默认识别应用与用户设置相同，则使用该应用
-        if(component.getPackageName().equals(default_recognition)){
-            sr = SpeechRecognizer.createSpeechRecognizer(this);
-            return ;
-        }
-        // 获取所有”可用的“语音识别服务, 设置用户所选择的应用为默认语音识别服务（没有则随便设置一个）
-        List<ResolveInfo> list = this.getPackageManager().queryIntentServices(new Intent(RecognitionService.SERVICE_INTERFACE), MATCH_ALL);
-        if (list != null && list.size() != 0) {
-            for (ResolveInfo info : list) {
-                Log.d(TAG, "\t" + info.loadLabel(context.getPackageManager()) + ": "
-                        + info.serviceInfo.packageName + "/" + info.serviceInfo.name);
-                if (info.serviceInfo.packageName.equals(default_recognition)) {
-                    component = new ComponentName(info.serviceInfo.packageName, info.serviceInfo.name);
-                    sr = SpeechRecognizer.createSpeechRecognizer(this, component);
-                    return ;
-                }
-            }
-        }
-        // 运行到这一步说明系统没有语音识别模块或与用户设置不符，应提醒用户
-        assert false;  //没想到怎么提醒，干脆先闪退吧
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,13 +64,10 @@ public class MainActivity extends AppCompatActivity {
         recogLang = settings.getString("recognition_lang", "ja-JP");
         contextLang = recogLang.split("-");
 
-        // 初始化语音识别服务
-        initSpeechRecognizer(this,settings);
-        sr.setRecognitionListener(new listener());
+        // 初始化语音识别服务 baidu
+        asr = EventManagerFactory.create(this,"asr");
+        asr.registerListener(this);
 
-//        if(SpeechRecognizer.isRecognitionAvailable(this)!=true){
-//            Log.e(TAG,"未支持的设备");
-//        }
         final Handler handler = new Handler(Looper.getMainLooper());
         final int REQUEST_PERMISSION_RECORD_AUDIO = 11302;
         final int REQUEST_PERMISSION_INTERNET = 11303;
@@ -141,10 +109,9 @@ public class MainActivity extends AppCompatActivity {
                         } else {
                             Amadeus.speak(voiceLines[VoiceLine.Line.DAGA_KOTOWARU], MainActivity.this);
                         }
+                    }else if (!Amadeus.isLoop && !Amadeus.isSpeaking) {
+                        promptSpeechInput();
                     }
-
-                } else if (!Amadeus.isLoop && !Amadeus.isSpeaking) {
-                    promptSpeechInput();
                 }
             }});
 
@@ -172,8 +139,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (sr != null)
-            sr.destroy();
+        //发送取消事件
+        asr.send(SpeechConstant.ASR_CANCEL, "{}", null, 0, 0);
+        //退出事件管理器
+        // 必须与registerListener成对出现，否则可能造成内存泄露
+        asr.unregisterListener(this);
+
         if (Amadeus.m != null)
             Amadeus.m.release();
     }
@@ -190,23 +161,12 @@ public class MainActivity extends AppCompatActivity {
         Amadeus.isLoop = false;
     }
 
-    // 获取用户语音输入(谷歌原生)
+    // 获取用户语音输入(百度sdk)
     private void promptSpeechInput() {
         micro.setVisibility(View.INVISIBLE);    //设置灰色麦克风不可见，则后面的绿色麦克风会显示出来
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, recogLang);
 
-        if(SpeechRecognizer.isRecognitionAvailable(MainActivity.this)){
-            //提示语音开始文字
-//            intent.putExtra(RecognizerIntent.EXTRA_PROMPT,"Please start your voice");
-            sr.startListening(intent);
-        }else{
-            Amadeus.speak(voiceLines[VoiceLine.Line.SORRY], MainActivity.this);
-            System.out.println("没有相关服务");
-//            sr.startListening(intent);
-        }
+        asr.send(SpeechConstant.ASR_START,"{}",null,0,0);
+
     }
 
     @Override
@@ -230,117 +190,46 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private class listener implements RecognitionListener {
-
-        private final String TAG = "VoiceListener";
-
-        public void onReadyForSpeech(Bundle params) {
-            Log.d(TAG, "Speech recognition start");
+    // 语音识别结果事件
+    @Override
+    public void onEvent(String name, String params, byte[] data, int offset, int length) {
+        // 识别相关的结果都在这里
+        if (params == null || params.isEmpty()) {
+            return;
         }
-        public void onBeginningOfSpeech() {
-            Log.d(TAG, "Listening speech");
-        }
-        public void onRmsChanged(float rmsdB) {
-            //Log.d(TAG, "onRmsChanged");
-        }
-        public void onBufferReceived(byte[] buffer) {
-            Log.d(TAG, "onBufferReceived");
-        }
-        public void onEndOfSpeech() {
-            Log.d(TAG, "Speech recognition end");
-        }
-        public void onError(int error) {
-            String error_info;
-            switch (error) {
-                case SpeechRecognizer.ERROR_AUDIO:
-                    error_info = "ERROR_AUDIO";
-                    break;
-                case SpeechRecognizer.ERROR_CLIENT:
-                    error_info = "ERROR_CLIENT";
-                    break;
-                case SpeechRecognizer.ERROR_RECOGNIZER_BUSY:
-                    error_info = "ERROR_RECOGNIZER_BUSY";
-                    break;
-                case SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS:
-                    error_info = "ERROR_INSUFFICIENT_PERMISSIONS";
-                    break;
-                case SpeechRecognizer.ERROR_NETWORK_TIMEOUT:
-                    error_info = "ERROR_NETWORK_TIMEOUT";
-                    break;
-                case SpeechRecognizer.ERROR_NETWORK:
-                    error_info = "ERROR_NETWORK";
-                    sr.destroy();
-                    break;
-                case SpeechRecognizer.ERROR_SERVER:
-                    error_info = "ERROR_SERVER";
-                    break;
-                case SpeechRecognizer.ERROR_NO_MATCH:
-                    error_info = "ERROR_NO_MATCH";
-                    break;
-                case SpeechRecognizer.ERROR_SPEECH_TIMEOUT:
-                    error_info = "ERROR_SPEECH_TIMEOUT";
-                    break;
-                case SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE:
-                    error_info = "ERROR_LANGUAGE_UNAVAILABLE";
-                    break;
-                default:
-                    assert false;
-                    return;
-            }
-            Log.d(TAG,error_info);
-            input_view.setText("ErrorExist:"+error_info);
+        if (params.contains("\"final_result\"")) {
+            // 一句话的最终识别结果
+            asr.send(SpeechConstant.ASR_STOP,"{}",null,0,0);
             Amadeus.isListening = false;
-            sr.cancel();
             micro.setVisibility(View.VISIBLE);
-            Amadeus.speak(voiceLines[VoiceLine.Line.SORRY], MainActivity.this);
-        }
-        public void onResults(Bundle results) {
-            String input = "";
-            String debug = "";
-            Log.d(TAG, "Received results");
-            ArrayList data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
 
-            for (Object word: data) {
-                debug += word + "\n";
+            String input = null;
+            JSONObject res = null;
+            try {
+                res = new JSONObject(params);
+                input = res.getString("best_result");
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-            Log.d(TAG, debug);
-
-            input += data.get(0);
-            // 显示识别结果
             input_view.setText(input);
-            /* TODO: Japanese doesn't split the words. Sigh. */
-            String[] splitInput = input.split(" ");
-
-            /* Really, google? */
-            if (splitInput[0].equalsIgnoreCase("Асистент")) {
-                splitInput[0] = "Ассистент";
+            params = input;
+            if(input!=null){
+                input = input.replaceAll("\\p{Punct}", "");
             }
-
+            // 进入复读机模式
+            if(input.contains("进入复读")){
+//                Amadeus.isRepeater = true;
+                Intent intent = new Intent(MainActivity.this,RepeaterActivity.class);
+                startActivity(intent);
+                return;
+            }
+            String[] splitInput = input.split(" ");
             /* Switch language within current context for voice recognition */
             Context context = LangContext.load(getApplicationContext(), contextLang[0]);
 
-            if (splitInput.length > 2 && splitInput[0].equalsIgnoreCase(context.getString(R.string.assistant))) {
-                String cmd = splitInput[1].toLowerCase();
-                String[] args = new String[splitInput.length - 2];
-                System.arraycopy(splitInput, 2, args, 0, splitInput.length - 2);
-
-                if (cmd.contains(context.getString(R.string.open))) {
-                    Amadeus.openApp(args, MainActivity.this);
-                }
-
-            } else {
+            if(!Amadeus.isRepeater){
                 Amadeus.responseToInput(input, context, MainActivity.this);
             }
-            micro.setVisibility(View.VISIBLE);
-            Amadeus.isListening = false;
         }
-        public void onPartialResults(Bundle partialResults) {
-            Log.d(TAG, "onPartialResults");
-        }
-        public void onEvent(int eventType, Bundle params) {
-            Log.d(TAG, "onEvent " + eventType);
-        }
-
     }
-
 }

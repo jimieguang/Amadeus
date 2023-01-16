@@ -8,34 +8,25 @@
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <!-- SDK level >=31 时需要请求该权限（设置闹钟所需），否则会闪退-->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <!-- 安卓11及以上需要请求该权限以获取设备安装的所有应用（用于调用谷歌语音识别）-->
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
-        tools:ignore="QueryAllPackagesPermission" />
-
-    <!-- 安卓11及以上需要在<queries>标签中显式指定需要获取的应用包名（默认隐藏，获取是用于调用语音识别）-->
-    <queries>
-        <!--获取不同品牌手机内置的语音识别应用（包名）-->
-        <!--谷歌-->
-        <package android:name="com.google.android.googlequicksearchbox" />
-        <!--小米-->
-        <package android:name="com.xiaomi.mibrain.speech" />
-        <!--华为-->
-        <package android:name="com.huawei.vassistant" />
-        <!--讯飞-->
-        <package android:name="com.iflytek.vflynote" />
-    </queries>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" /> <!-- SDK level >=31 时需要请求该权限（设置闹钟所需），否则会闪退 -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
 
     <application
-        android:usesCleartextTraffic="true"
-
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true">
+        <activity
+            android:name=".RepeaterActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -76,8 +67,10 @@
             android:noHistory="true"
             android:theme="@style/AlarmDialog">
             <intent-filter>
-                <!--注册自定义intent以跳转alarm activity -->
+
+                <!-- 注册自定义intent以跳转alarm activity -->
                 <action android:name="android.intent.action.VIEW.ALARM" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>

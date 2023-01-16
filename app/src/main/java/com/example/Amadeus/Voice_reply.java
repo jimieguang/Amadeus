@@ -1,21 +1,30 @@
 package com.example.Amadeus;
 
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
+import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 
-import org.json.JSONArray;
+import androidx.core.content.ContextCompat;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.FormBody;
@@ -26,7 +35,16 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class Voice_reply {
-    void send(String input) {
+    private Handler myHandler;
+    public static String last_voice;
+    public InputStream voice_byte = null;
+    public static String filepath = Environment.getExternalStorageDirectory().getPath() + "/Music/Amadeus";
+
+
+    Voice_reply(Handler myHandler){
+        this.myHandler = myHandler;
+    }
+    void get_voice(String input,Handler myHandler) {
         //开启线程，发送请求
         new Thread(new Runnable() {
             // 把其他语言转换成日语
@@ -110,27 +128,86 @@ public class Voice_reply {
                 Call call = client.newCall(request);
                 try {
                     Response response = call.execute();
-                    InputStream voice_byte = response.body().byteStream();
-                    File tempVoice = File.createTempFile("voice", ".flac");
-                    tempVoice.deleteOnExit();
-                    FileOutputStream fos = new FileOutputStream(tempVoice);
-
-                    int byteRead;
-                    while((byteRead=voice_byte.read()) != -1){
-                        fos.write(byteRead);
-                    }
-                    fos.close();
-
-                    MediaPlayer mediaPlayer = new MediaPlayer();
-                    FileInputStream fis = new FileInputStream(tempVoice);
-                    mediaPlayer.setDataSource(fis.getFD());
-                    mediaPlayer.prepare();
-                    mediaPlayer.start();
+                    voice_byte = response.body().byteStream();
+                    save_voice();
+                    Message msg = Message.obtain();
+                    msg.what = 1;
+                    myHandler.sendMessage(msg);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
 
         }).start();
+    }
+
+    public void voice_play(String input,Handler myHandler) throws IOException {
+        if(Objects.equals(input, "last")){
+            input = last_voice;
+        }
+        if(find_mp3(input)){
+            // 表明无需等待网络请求
+            Message msg = Message.obtain();
+            msg.what = 2;
+            myHandler.sendMessage(msg);
+            //播放音频
+            MediaPlayer mediaPlayer = new MediaPlayer();
+            String file;
+            file = filepath +"/"+ md5(input) + ".mp3";
+            mediaPlayer.setDataSource(file);
+            mediaPlayer.prepare();
+            mediaPlayer.start();
+        }else{
+            last_voice = input;
+            get_voice(input,myHandler);
+        }
+    }
+
+    public void save_voice() throws IOException {
+        File voice_file = new File(filepath+"/"+md5(last_voice)+".mp3");
+        FileOutputStream fos = new FileOutputStream(voice_file);
+
+        int byteRead;
+        while((byteRead=voice_byte.read()) != -1){
+            fos.write(byteRead);
+        }
+        fos.close();
+    }
+
+    public boolean find_mp3(String input){
+//        String path = Environment.getExternalStorageDirectory().getPath() + "/Music/Amadeus";
+        File file=new File(filepath);
+        //文件夹不存在，则创建它
+        if(!file.exists()){
+            file.mkdir();
+        }
+        File[] subFile = file.listFiles();
+
+        for (File value : subFile) {
+            // 判断是否为文件夹
+            if (!value.isDirectory()) {
+                String filename = value.getName();
+                if(filename.equals(md5(input)+".mp3"))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    // 对字符串进行md5加密
+    public String md5(String src){
+        try {
+            MessageDigest m = MessageDigest.getInstance("MD5");
+            m.update(src.getBytes(StandardCharsets.UTF_8));
+            byte[] s = m.digest();
+            StringBuilder srcBuilder = new StringBuilder();
+            for (byte b : s) {
+                srcBuilder.append(Integer.toHexString((0x000000ff & b) | 0xffffff00).substring(6));
+            }
+            src = srcBuilder.toString();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return src;
     }
 }

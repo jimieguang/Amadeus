@@ -80,7 +80,7 @@
     <string name="line_ok">什么？</string>
 
     <!-- Input strings -->
-    <string name="christina">christina</string>
+    <string name="christina">克里斯蒂娜</string>
     <string name="nullpo">nullpo</string>
     <string name="the_zombie">the zombie</string>
     <string name="the_zombie2">the zombie</string>
@@ -91,13 +91,13 @@
     <string name="salieri">salieri</string>
     <string name="maho">maho</string>
     <string name="hiyajo">hiyajo</string>
-    <string name="time_machine">time machine</string>
+    <string name="time_machine">时间机器</string>
     <string name="cern">cern</string>
     <string name="time_travel">time travel</string>
     <string name="time_travel2">time travel</string>
     <string name="memory">memory</string>
     <string name="amadeus">amadeus</string>
-    <string name="science">science</string>
+    <string name="science">科学</string>
     <string name="hello">hello</string>
     <string name="good_morning">good morning</string>
     <string name="konnichiwa">good afternoon</string>
