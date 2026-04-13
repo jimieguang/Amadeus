@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/pref_app_settings">
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="show_subtitles"
+            android:summary="@string/pref_subtitles_desc"
+            android:title="@string/pref_subtitles" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="show_notification"
+            android:summary="@string/pref_notification_desc"
+            android:title="@string/pref_notification" />
+        <ListPreference
+            android:defaultValue="@string/default_lang"
+            android:entries="@array/languagesArray"
+            android:entryValues="@array/languagesValues"
+            android:key="lang"
+            android:summary="@string/pref_lang_desc"
+            android:title="@string/pref_lang" />
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/ttsThreadsEntries"
+            android:entryValues="@array/ttsThreadsValues"
+            android:key="tts_threads"
+            android:summary="@string/pref_tts_threads_desc"
+            android:title="@string/pref_tts_threads" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_alarm_settings">
+        <Preference android:title="@string/pref_alarm_setup">
+            <intent
+                android:action="android.intent.action.VIEW.ALARM"
+                />
+        </Preference>
+        <ListPreference
+            android:entries="@array/ringtonesArray"
+            android:entryValues="@array/ringtonesValues"
+            android:key="ringtone"
+            android:summary="@string/pref_alarm_ringtone_desc"
+            android:title="@string/pref_alarm_ringtone" />
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="24-hour_format"
+            android:title="@string/pref_alarm_24hour_format" />
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="vibrate"
+            android:title="@string/pref_alarm_vibrate" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_llm_settings">
+        <EditTextPreference
+            android:key="llm_base_url"
+            android:title="@string/pref_llm_base_url"
+            android:summary="@string/pref_llm_base_url_desc"
+            android:defaultValue="https://api.openai.com" />
+
+        <EditTextPreference
+            android:key="llm_api_key"
+            android:title="@string/pref_llm_api_key"
+            android:summary="@string/pref_llm_api_key_desc"
+            android:defaultValue="" />
+
+        <EditTextPreference
+            android:key="llm_model"
+            android:title="@string/pref_llm_model"
+            android:summary="@string/pref_llm_model_desc"
+            android:defaultValue="gpt-4o-mini" />
+
+        <EditTextPreference
+            android:key="llm_system_prompt"
+            android:title="@string/pref_llm_system_prompt"
+            android:summary="@string/pref_llm_system_prompt_desc"
+            android:defaultValue="你是一个简洁、自然、友好的语音助手。" />
+
+        <EditTextPreference
+            android:key="llm_timeout_sec"
+            android:title="@string/pref_llm_timeout_sec"
+            android:summary="@string/pref_llm_timeout_sec_desc"
+            android:defaultValue="30" />
+    </PreferenceCategory>
+</PreferenceScreen>

@@ -1,0 +1,24 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+/release
+app/release/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+# AAR 需要随项目一起提交
+
+# 大模型与发布包通过 GitHub Release 分发，不进入仓库
+app/src/main/assets/sensevoice/model_int8.onnx
+app/src/main/assets/tts/vits-melo-tts-zh_en/model.onnx
+app/src/main/assets/open_jtalk_dic_utf_8-1.11/sys.dic
+app/release/*.apk
